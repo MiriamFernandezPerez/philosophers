@@ -3,14 +3,21 @@
 
 int main(int ac, char **av)
 {
-    int i;
+    t_data  data;
 
-    i = 0;
-    (void)av;
-    (void)i;
-    if (ac != 5)
+    if (ac < 5 || ac > 6)
+        return (ft_msn(ERR_ARGS, 2), 1);
+    else
     {
-        return (ft_msn(ERR_ARGS, 2));
+        check_arg(&data, av);
+        //init(&data);
+        //start(&data);
+        //ft_free(&data);
     }
+    char *s;
+    s = malloc(sizeof(char *));
+    if (!s)
+        return(ft_msn(strerror(errno), 2), 1);
+    free(s);
     return (0);
 }
