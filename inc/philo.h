@@ -15,6 +15,7 @@
 
 # define ERR_ARGS "Wrong arguments quantity, this program require:\n1-Number of philosophers\n2-Time to die\n3-Time to eat\n4-Time to sleep\n5-Number of times each philosopher must eat (Optional)\n"
 # define NEG "Negative values are not allowed\n"
+# define MAX "Number too big, can't be higher than MAX_INT\n"
 # define NOT_DIG "Error. Not a digit value\n"
 
 typedef struct s_data t_data;
@@ -53,11 +54,13 @@ struct s_data
 int main(int ac, char **av);
 
 /*utils.c*/
+int	check_limits(long int n);
+int	ft_isdigit(char c);
 int	ft_isspace(char c);
 int	ft_strlen(char *s);
 int ft_msn(char *s, int fd);
 
 /*check_arg*/
-void check_arg(t_data *data, char **av);
+void check_arg(t_data *data, char **av, int ac);
 
 #endif
