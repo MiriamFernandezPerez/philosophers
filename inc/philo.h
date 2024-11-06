@@ -17,6 +17,8 @@
 # define NEG "Negative values are not allowed\n"
 # define MAX "Number too big, can't be higher than MAX_INT\n"
 # define NOT_DIG "Error. Not a digit value\n"
+# define ZERO "Number Zero not allowed\n"
+# define NO_TIME "Use more than 60ms\n"
 
 typedef struct s_data t_data;
 

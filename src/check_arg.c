@@ -14,11 +14,9 @@
 
 static char	*check_input(char *str)
 {
-	//int		len;
 	int		i;
 	char	*nb;
 
-	//len = 0;
 	i = 0;
 	while (ft_isspace(str[i]))
 		++str;
@@ -39,7 +37,6 @@ static	long ft_atol(char *str)
 
 	nb = 0;
 	sign = 1;
-	
 	str = check_input(str);
 	if (str == NULL)
 		return (-1);
@@ -68,37 +65,55 @@ int	check_digits(char *s)
 	i = 0;
 	while (s[i] != '\0')
 	{
-		printf("evaluando %c\n", s[i]);
 		if (ft_isdigit(s[i]))
 			i++;
 		else
-		{
-			printf("entra\n");
 			return (ft_msn(NOT_DIG, 2), EXIT_FAILURE);
-		}
 	}
 	return (0);
+}
+
+void	fill_data(t_data *data, char **av, int ac)
+{
+	data->num_philo = ft_atol(av[1]);
+	data->time_die = ft_atol(av[2]) * 1e3;
+	data->time_eat = ft_atol(av[3]) * 1e3;
+	data->time_sleep = ft_atol(av[4]) * 1e3;
+	if (ac == 6)
+		data->max_meals = ft_atol(av[5]);
+	else
+		data->max_meals = -1;
+	if (data->time_die < 6e3 || data->time_eat < 6e3 || data->time_sleep < 6e3)
+	{
+		ft_msn(NO_TIME, 2);
+		exit(EXIT_FAILURE);
+	}
+	printf("num philo %ld\n", data->num_philo);
+	printf("time to die %ld\n", data->time_die);
+	printf("time to eat %ld\n", data->time_eat);
+	printf("time to sleep %ld\n", data->time_sleep);
 }
 
 void check_arg(t_data *data, char **av, int ac)
 {
 	int	i;
+	long int	res;
 
 	i = 0;
 	i++;
 	while (i < ac)
 	{
+		res = ft_atol(av[i]);
+		if (res < 0)
+			exit(EXIT_FAILURE);
+		else if (res == 0)
+		{
+			ft_msn(ZERO, 2);
+			exit(EXIT_FAILURE);
+		}
 		if (check_digits(av[i]) == 1)
 			exit (EXIT_FAILURE);
 		i++;
 	}
-	data->num_philo = ft_atol(av[1]);
-	data->time_die = ft_atol(av[2]);
-	data->time_eat = ft_atol(av[3]);
-	data->time_sleep = ft_atol(av[4]);
-	if (ac == 6)
-		data->max_meals = ft_atol(av[5]);
-	if (data->num_philo == -1 || data->time_die == -1 || data->time_eat == -1 || data->time_sleep == -1 || data->max_meals == -1)
-		exit(EXIT_FAILURE);
-	printf("num philo %ld\n", data->num_philo);
+	fill_data(data, av, ac);
 }
