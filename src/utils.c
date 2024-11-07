@@ -6,7 +6,7 @@
 /*   By: mirifern <mirifern@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/05 20:45:03 by mirifern          #+#    #+#             */
-/*   Updated: 2024/11/05 20:45:07 by mirifern         ###   ########.fr       */
+/*   Updated: 2024/11/07 21:43:02 by mirifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,9 +48,9 @@ int	check_limits(long int n)
 	max = 2147483647;
 	min = -2147483648;
 	if (n > max)
-		return(ft_msn(MAX, 2), EXIT_FAILURE);
+		return (ft_msn(MAX, 2), EXIT_FAILURE);
 	else if (n < min)
-		return(ft_msn(NEG, 2), EXIT_FAILURE);
+		return (ft_msn(NEG, 2), EXIT_FAILURE);
 	return (0);
 }
 

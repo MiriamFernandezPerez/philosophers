@@ -6,13 +6,13 @@
 /*   By: mirifern <mirifern@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/05 20:44:41 by mirifern          #+#    #+#             */
-/*   Updated: 2024/11/05 20:44:47 by mirifern         ###   ########.fr       */
+/*   Updated: 2024/11/07 21:42:28 by mirifern         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-static char	*check_input(char *str)
+char	*check_input(char *str)
 {
 	int		i;
 	char	*nb;
@@ -23,14 +23,14 @@ static char	*check_input(char *str)
 	if (str[i] == '+')
 		++str;
 	else if (str[i] == '-')
-		return(ft_msn(NEG, 2), NULL);
-    if (!str[i])
-        return(ft_msn(NOT_DIG, 2), NULL);
-    nb = str;
-    return (nb);
+		return (ft_msn(NEG, 2), NULL);
+	if (!str[i])
+		return (ft_msn(NOT_DIG, 2), NULL);
+	nb = str;
+	return (nb);
 }
 
-static	long ft_atol(char *str)
+long	ft_atol(char *str)
 {
 	long int	nb;
 	int			sign;
@@ -94,9 +94,9 @@ void	fill_data(t_data *data, char **av, int ac)
 	printf("time to sleep %ld\n", data->time_sleep);
 }
 
-void check_arg(t_data *data, char **av, int ac)
+void	check_arg(t_data *data, char **av, int ac)
 {
-	int	i;
+	int			i;
 	long int	res;
 
 	i = 0;

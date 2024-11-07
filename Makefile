@@ -13,6 +13,8 @@ INCLUDES = -I $(HEADER_DIR)
 SRC = src/philo.c\
       src/utils.c\
 	  src/check_arg.c\
+	  src/handle_thread.c\
+	  src/handle_mutex.c\
 
 OBJS = $(SRC:.c=.o)
 
