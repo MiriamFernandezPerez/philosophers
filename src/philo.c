@@ -30,8 +30,8 @@ int	main(int ac, char **av)
 	else
 	{
 		check_arg(&data, av, ac);
-		//init(&data);
-		//start(&data);
+		init(&data);
+		start(&data);
 		//ft_free(&data);
 	}
 	char	*s;

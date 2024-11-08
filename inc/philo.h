@@ -74,19 +74,22 @@ typedef struct s_philo
 	t_fork		*left;
 	t_fork		*right;
 	pthread_t	thread_id;
+	t_data		*data;
 }				t_philo;
 
 struct	s_data
 {
-	long	num_philo;
-	long	time_die;
-	long	time_eat;
-	long	time_sleep;
-	long	max_meals;
-	long	start;
-	long	end;
-	t_philo	*philos;
-	t_fork	*forks;
+	long			num_philo;
+	long			time_die;
+	long			time_eat;
+	long			time_sleep;
+	long			max_meals;
+	long			start;
+	int				end;
+	int				sincronize;
+	pthread_mutex_t data_mutex;
+	t_philo			*philos;
+	t_fork			*forks;
 };
 
 /*philo.c*/
@@ -99,14 +102,14 @@ int		ft_isspace(char c);
 int		ft_strlen(char *s);
 int		ft_msn(char *s, int fd);
 
-/*check_arg*/
+/*check_arg.c*/
 char	*check_input(char *str);
 long	ft_atol(char *str);
 int		check_digits(char *s);
 void	fill_data(t_data *data, char **av, int ac);
 void	check_arg(t_data *data, char **av, int ac);
 
-/*handle_mutex*/
+/*handle_mutex.c*/
 void	mutex_error(int status, t_code code);
 void	handle_mutex(pthread_mutex_t *mutex, t_code code);
 
@@ -114,4 +117,9 @@ void	handle_mutex(pthread_mutex_t *mutex, t_code code);
 void	thread_error(int status, t_code code);
 void	handle_thread(pthread_t *thread, void *(*foo)(void *), void *data, t_code code);
 
+/*init.c*/
+void	init(t_data *data);
+
+/*start.c*/
+void    start(t_data *data);
 #endif
