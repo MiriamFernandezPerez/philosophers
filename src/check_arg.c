@@ -88,10 +88,8 @@ void	fill_data(t_data *data, char **av, int ac)
 		ft_msn(NO_TIME, 2);
 		exit(EXIT_FAILURE);
 	}
-	printf("num philo %ld\n", data->num_philo);
-	printf("time to die %ld\n", data->time_die);
-	printf("time to eat %ld\n", data->time_eat);
-	printf("time to sleep %ld\n", data->time_sleep);
+	data->start = current_time();
+	data->dead = 0;
 }
 
 void	check_arg(t_data *data, char **av, int ac)
@@ -104,11 +102,10 @@ void	check_arg(t_data *data, char **av, int ac)
 	while (i < ac)
 	{
 		res = ft_atol(av[i]);
-		if (res < 0)
-			exit(EXIT_FAILURE);
-		else if (res == 0)
+		if (res <= 0)
 		{
-			ft_msn(ZERO, 2);
+			if (res == 0)
+				ft_msn(ZERO, 2);
 			exit(EXIT_FAILURE);
 		}
 		if (check_digits(av[i]) == 1)

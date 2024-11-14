@@ -30,14 +30,14 @@ void	thread_error(int status, t_code code)
 		ft_msn(DEADLK, 2);
 }
 
-void	handle_thread(pthread_t *thread, void *(*foo)(void *), void *data, t_code code)
+void	handle_thread(pthread_t *th, void *(*foo)(void *), void *data, t_code c)
 {
-	if (code == CREATE)
-		thread_error(pthread_create(thread, NULL, foo, data), code);
-	else if (code == JOIN)
-		thread_error(pthread_join(*thread, NULL), code);
-	else if (code == DETACH)
-		thread_error(pthread_detach(*thread), code);
+	if (c == CREATE)
+		thread_error(pthread_create(th, NULL, foo, data), c);
+	else if (c == JOIN)
+		thread_error(pthread_join(*th, NULL), c);
+	else if (c == DETACH)
+		thread_error(pthread_detach(*th), c);
 	else
 		ft_msn(TH_CODE, 2);
 }

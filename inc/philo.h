@@ -26,7 +26,10 @@
 # include <errno.h>
 
 # define ERR_MALL "Malloc error, please check your computer's memory\n"
-# define ERR_ARGS "Wrong arguments quantity, this program require:\n1-Number of philosophers\n2-Time to die\n3-Time to eat\n4-Time to sleep\n5-Number of times each philosopher must eat (Optional)\n"
+# define ERR_ARGS "Wrong arguments quantity, this program require:\n"
+# define NUM_PH "1-Number of philosophers\n"
+# define TIMES "2-Time to die\n3-Time to eat\n4-Time to sleep\n"
+# define OPTIONAL "5-Number of times each philosopher must eat (Optional)\n"
 # define NEG "Negative values are not allowed\n"
 # define MAX "Number too big, can't be higher than MAX_INT\n"
 # define NOT_DIG "Error. Not a digit value\n"
@@ -85,8 +88,7 @@ struct	s_data
 	long			time_sleep;
 	long			max_meals;
 	long			start;
-	int				end;
-	int				sincronize;
+	int				dead;
 	pthread_mutex_t data_mutex;
 	t_philo			*philos;
 	t_fork			*forks;
@@ -122,4 +124,10 @@ void	init(t_data *data);
 
 /*start.c*/
 void    start(t_data *data);
+
+/*monitor.c*/
+long	current_time();
+void	wait_ms(long ms);
+void	log_status(t_philo *philo, const char *status);
+void	*monitor_philos(void *data);
 #endif
