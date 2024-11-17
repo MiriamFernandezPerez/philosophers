@@ -12,33 +12,33 @@
 
 #include "philo.h"
 
-/* Bloquea los tenedores de forma segura, evitando deadlock */
-void	take_forks(t_philo *philo)
-{
-	if (philo->left->fork_id < philo->right->fork_id)
-	{
-		pthread_mutex_lock(&philo->left->fork);
-		log_status(philo, "has taken a fork");
-		//TODO
-		//VERIFICAR SI TENGO EL OTRO TENEDOR Y COMER
-		//SI NO LO TENGO, LIBERO EL TENEDOR QUE TENGO
-		//Y VUELVO A INTENTAR TOMAR LOS TENEDORES
-		//PARA EVITAR DEADLOCK
-		pthread_mutex_unlock(&philo->left->fork);
-	}
-	else
-	{
-		pthread_mutex_lock(&philo->right->fork);
-		log_status(philo, "has taken a fork");
-		pthread_mutex_unlock(&philo->right->fork);
-	}
-}
-
 /* Desbloqueo los mutex de los tenedores */
 void	release_forks(t_philo *philo)
 {
-	pthread_mutex_unlock(&philo->left->fork);
-	pthread_mutex_unlock(&philo->right->fork);
+	handle_mutex(&(philo->data->forks[philo->left]), UNLOCK);
+	handle_mutex(&(philo->data->forks[philo->right]), UNLOCK);
+}
+
+int	check_dead(t_philo *philo)
+{
+	long	time;
+
+	time = current_time();
+	handle_mutex(&philo->data->data_mutex, LOCK);
+	if (philo->data->dead == 1)
+	{
+		handle_mutex(&philo->data->data_mutex, UNLOCK);
+		return (1);
+	}
+	if (time - philo->last_meal > philo->data->time_die)
+	{
+		philo->data->dead = 1;
+		//printf("%ld %d died\n", time - philo->data->start, philo->id);
+		handle_mutex(&philo->data->data_mutex, UNLOCK);
+		return (1);
+	}
+	handle_mutex(&philo->data->data_mutex, UNLOCK);
+	return (0);
 }
 
 /* Simulación de cada filósofo */
@@ -49,17 +49,19 @@ void	*simulation(void *data)
 	philo = (t_philo *)data;
 	while (1)
 	{
-		pthread_mutex_lock(&philo->data->data_mutex);
-		if (philo->data->dead == 1)
+		if (take_forks(philo) == 0)
 		{
-			pthread_mutex_unlock(&philo->data->data_mutex);
-			break ;
+			log_status(philo, "is eating");
+			philo->last_meal = current_time();
+			//wait_ms(philo->data->time_eat);
+			release_forks(philo);
+			log_status(philo, "is sleeping");
+			wait_ms(philo->data->time_sleep);
+			log_status(philo, "is thinking");
+
 		}
-		pthread_mutex_unlock(&philo->data->data_mutex);
-		take_forks(philo);
-		pthread_mutex_lock(&philo->data->data_mutex);
-		log_status(philo, "is eating");
-		philo->last_meal = current_time();
+			continue ;
+
 		pthread_mutex_unlock(&philo->data->data_mutex);
 		wait_ms(philo->data->time_eat);
 		release_forks(philo);
@@ -74,16 +76,10 @@ void	*simulation(void *data)
 void	start(t_data *data)
 {
 	int			i;
-	pthread_t	monitor;
 
 	i = 0;
 	if (data->max_meals == 0)
 		return ;
-	else if (data->num_philo == 1)
-	{
-		printf("Solo un filósofo\n"); // TODO
-		return ;
-	}
 	/* Creo los hilos para los filósofos */
 	while (i < data->num_philo)
 	{
@@ -91,8 +87,7 @@ void	start(t_data *data)
 		handle_thread(&data->philos[i].thread_id, simulation, &data->philos[i], CREATE);
 		i++;
 	}
-	/* Creo el hilo de monitoreo de filósofos */
-	handle_thread(&monitor, monitor_philos, data, CREATE);
+	monitor_philos(data);
 	i = 0;
 	/* Espero que todos los filósofos terminen */
 	while (i < data->num_philo)
@@ -100,6 +95,4 @@ void	start(t_data *data)
 		handle_thread(&data->philos[i].thread_id, NULL, NULL, JOIN);
 		i++;
 	}
-	// Espero que el hilo de monitoreo termine
-	handle_thread(&monitor, NULL, NULL, JOIN);
 }

@@ -79,6 +79,9 @@ void	fill_data(t_data *data, char **av, int ac)
 	data->time_die = ft_atol(av[2]) * 1e3;
 	data->time_eat = ft_atol(av[3]) * 1e3;
 	data->time_sleep = ft_atol(av[4]) * 1e3;
+	/*data->time_die = ft_atol(av[2]);
+	data->time_eat = ft_atol(av[3]);
+	data->time_sleep = ft_atol(av[4]);*/
 	if (ac == 6)
 		data->max_meals = ft_atol(av[5]);
 	else

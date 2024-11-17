@@ -17,7 +17,8 @@ SRC = src/philo.c\
 	  src/handle_mutex.c\
 	  src/init.c\
 	  src/start.c\
-			src/monitor.c\
+	  src/routine.c\
+	  src/monitor.c\
 
 OBJS = $(SRC:.c=.o)
 

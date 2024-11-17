@@ -18,13 +18,12 @@ long	current_time(void)
 	struct timeval	tv;
 
 	gettimeofday(&tv, NULL);
-	printf("CURRENT TIME %ld\n", (tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 	return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
 void	wait_ms(long ms)
 {
-	usleep(ms * 1000);
+	usleep(ms);
 }
 
 /* Imprime el estado de los filósofos */
@@ -33,46 +32,52 @@ void	log_status(t_philo *philo, const char *status)
 	long	time;
 
 	time = current_time() - philo->data->start;
-	printf("DATA-STAR %ld\n", philo->data->start);
-	printf("TIME %ld\n", time);
 	pthread_mutex_lock(&philo->data->data_mutex);
 	if (philo->data->dead == 0)
-		printf("%ld %d %s\n", time, philo->id, status);
-	printf("TIME %ld\n", time);
+		printf("%ld Philosopher %d %s\n", time, philo->id, status);
 	pthread_mutex_unlock(&philo->data->data_mutex);
 }
 
+int check_meals(t_data *d, int i)
+{
+	if (d->max_meals != -1 && d->philos[i].total_meals == d->max_meals)
+	{
+		handle_mutex(&d->data_mutex, LOCK);
+		d->philos[i].full = 1;
+		handle_mutex(&d->data_mutex, UNLOCK);
+		handle_mutex(&d->philos[i].philo_mutex, UNLOCK);
+		i++;
+		//continue ;
+	}
+	return (0);
+}
+
 /* Monitoriza el estado de los filósofos */
-void	*monitor_philos(void *data)
+void	*monitor_philos(t_data *d)
 {
 	int		i;
-	t_data	*d;
 
-	i = 0;
-	d = (t_data *)data;
 	while (1)
 	{
-		pthread_mutex_lock(&d->data_mutex);
-		if (d->dead == 1)
-		{
-			pthread_mutex_unlock(&d->data_mutex);
-			break ;
-		}
-		pthread_mutex_unlock(&d->data_mutex);
+		i = 0;
 		while (i < d->num_philo)
 		{
-			pthread_mutex_lock(&d->data_mutex);
+			handle_mutex(&d->philos[i].philo_mutex, LOCK);
 			if (current_time() - d->philos[i].last_meal > d->time_die)
 			{
+				handle_mutex(&d->data_mutex, LOCK);
 				log_status(&d->philos[i], "died");
 				d->dead = 1;
-				pthread_mutex_unlock(&d->data_mutex);
+				handle_mutex(&d->data_mutex, UNLOCK);
+				handle_mutex(&d->philos[i].philo_mutex, UNLOCK);
 				break ;
 			}
 			pthread_mutex_unlock(&d->data_mutex);
+			if (check_meals(d, i))
+				break ;
 			i++;
 		}
-		wait_ms(10);
+		//wait_ms(10);
 	}
-	pthread_exit(NULL);
+	//pthread_exit(NULL);
 }

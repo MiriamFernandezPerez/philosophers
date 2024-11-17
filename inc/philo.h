@@ -62,22 +62,23 @@ typedef enum e_code
 
 typedef struct s_data	t_data;
 
-typedef struct s_fork
+/*typedef struct s_fork
 {
 	int				fork_id;
 	pthread_mutex_t	fork;
-}				t_fork;
+}				t_fork;*/
 
 typedef struct s_philo
 {
-	int			id;
-	long		max_meals;
-	int			full;
-	long		last_meal;
-	t_fork		*left;
-	t_fork		*right;
-	pthread_t	thread_id;
-	t_data		*data;
+	int				id;
+	long			total_meals;
+	int				full;
+	long			last_meal;
+	int				left;
+	int				right;
+	pthread_mutex_t philo_mutex;
+	pthread_t		thread_id;
+	t_data			*data;
 }				t_philo;
 
 struct	s_data
@@ -89,20 +90,22 @@ struct	s_data
 	long			max_meals;
 	long			start;
 	int				dead;
-	pthread_mutex_t data_mutex;
+	pthread_mutex_t	data_mutex;
 	t_philo			*philos;
-	t_fork			*forks;
+	pthread_mutex_t	*forks;
 };
 
 /*philo.c*/
+void	ft_free(t_data *data);
+int		ft_msn(char *s, int fd);
 int		main(int ac, char **av);
 
 /*utils.c*/
+int		ft_strlen(char *s);
+int		ft_strcmp(char *s1, char *s2);
 int		check_limits(long int n);
 int		ft_isdigit(char c);
 int		ft_isspace(char c);
-int		ft_strlen(char *s);
-int		ft_msn(char *s, int fd);
 
 /*check_arg.c*/
 char	*check_input(char *str);
@@ -112,22 +115,34 @@ void	fill_data(t_data *data, char **av, int ac);
 void	check_arg(t_data *data, char **av, int ac);
 
 /*handle_mutex.c*/
-void	mutex_error(int status, t_code code);
-void	handle_mutex(pthread_mutex_t *mutex, t_code code);
+int		mutex_error(int status, t_code code);
+int		handle_mutex(pthread_mutex_t *mutex, t_code code);
 
 /*handle_thread*/
-void	thread_error(int status, t_code code);
-void	handle_thread(pthread_t *thread, void *(*foo)(void *), void *data, t_code code);
+int		thread_error(int status, t_code code);
+int		handle_thread(pthread_t *th, void *(*f)(void *), void *data, t_code c);
 
 /*init.c*/
-void	init(t_data *data);
+void	ft_malloc(t_data *data);
+int		init_philo(t_data *data);
+int		init(t_data *data);
 
 /*start.c*/
+int		check_dead(t_philo *philo);
+void	release_forks(t_philo *philo);
+void	*simulation(void *data);
 void    start(t_data *data);
+
+/*routine.c*/
+int		take_second_fork(t_philo *philo);
+int		take_first_fork(t_philo *philo);
+int		take_forks(t_philo *philo);
+int		philo_eat(t_philo *philo);
+int		philo_sleep(t_philo *philo);
 
 /*monitor.c*/
 long	current_time();
 void	wait_ms(long ms);
 void	log_status(t_philo *philo, const char *status);
-void	*monitor_philos(void *data);
+void	*monitor_philos(t_data *d);
 #endif

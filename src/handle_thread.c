@@ -12,32 +12,43 @@
 
 #include "philo.h"
 
-void	thread_error(int status, t_code code)
+int	thread_error(int status, t_code code)
 {
 	if (status == 0)
-		return ;
+		return (0);
 	if (status == EAGAIN)
-		ft_msn(AGAIN, 2);
+		return (ft_msn(AGAIN, 2), 1);
 	else if (status == EPERM)
-		ft_msn(NO_PERM, 2);
+		return (ft_msn(NO_PERM, 2), 1);
 	else if (status == EINVAL && code == CREATE)
-		ft_msn(VALUE_ATTR, 2);
+		return (ft_msn(VALUE_ATTR, 2), 1);
 	else if (status == EINVAL && (code == JOIN || code == DETACH))
-		ft_msn(NO_JOIN, 2);
+		return (ft_msn(NO_JOIN, 2), 1);
 	else if (status == ESRCH)
-		ft_msn(SRCH, 2);
+		return (ft_msn(SRCH, 2), 1);
 	else if (status == EDEADLK)
-		ft_msn(DEADLK, 2);
+		return (ft_msn(DEADLK, 2), 1);
+	return (0);
 }
 
-void	handle_thread(pthread_t *th, void *(*foo)(void *), void *data, t_code c)
+int	handle_thread(pthread_t *th, void *(*f)(void *), void *data, t_code c)
 {
 	if (c == CREATE)
-		thread_error(pthread_create(th, NULL, foo, data), c);
+	{
+		if (thread_error(pthread_create(th, NULL, f, data), c) != 0)
+			return (1);
+	}
 	else if (c == JOIN)
-		thread_error(pthread_join(*th, NULL), c);
+	{
+		if (thread_error(pthread_join(*th, NULL), c) != 0)
+			return (1);
+	}
 	else if (c == DETACH)
-		thread_error(pthread_detach(*th), c);
+	{
+		if (thread_error(pthread_detach(*th), c) != 0)
+			return (1);
+	}
 	else
-		ft_msn(TH_CODE, 2);
+		return (ft_msn(TH_CODE, 2), 1);
+	return (0);
 }

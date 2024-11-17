@@ -12,6 +12,22 @@
 
 #include "philo.h"
 
+void ft_free(t_data *data)
+{
+	int	i;
+
+	i = 0;
+	while (i < data->num_philo)
+	{
+		pthread_mutex_destroy(&data->forks[i]);
+		pthread_mutex_destroy(&data->philos[i].philo_mutex);
+		i++;
+	}
+	free(data->philos);
+	free(data->forks);
+	pthread_mutex_destroy(&data->data_mutex);
+}
+
 //Write msn function
 int	ft_msn(char *s, int fd)
 {
@@ -35,10 +51,10 @@ int	main(int ac, char **av)
 	else
 	{
 		check_arg(&data, av, ac);
-		init(&data);
+		if (init(&data) == 1)
+			return (1);
 		start(&data);
-		//ft_free(&data);
+		ft_free(&data);
 	}
-
 	return (0);
 }

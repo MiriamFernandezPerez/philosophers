@@ -31,7 +31,6 @@ int	ft_strcmp(char *s1, char *s2)
 	i = 0;
 	while (s1[i] != '\0' && s2[i] != '\0')
 	{
-		printf("%d vs %d\n", s1[i] - 48, s2[i] - 48);
 		if ((unsigned char)s1[i] == (unsigned char)s2[i])
 			i++;
 		else
