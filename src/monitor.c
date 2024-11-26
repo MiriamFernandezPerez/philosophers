@@ -10,74 +10,65 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
-/* Obtiene el tiempo actual y lo convierte a milisegundos */
-long	current_time(void)
-{
-	struct timeval	tv;
-
-	gettimeofday(&tv, NULL);
-	return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
-}
-
-void	wait_ms(long ms)
-{
-	usleep(ms);
-}
-
-/* Imprime el estado de los filósofos */
-void	log_status(t_philo *philo, const char *status)
+bool philo_died(t_philo *philo)
 {
 	long	time;
+	long	t_to_die;
 
-	time = current_time() - philo->data->start;
-	pthread_mutex_lock(&philo->data->data_mutex);
-	if (philo->data->dead == 0)
-		printf("%ld Philosopher %d %s\n", time, philo->id, status);
-	pthread_mutex_unlock(&philo->data->data_mutex);
+	if (get_bool(&philo->philo_mutex, &philo->full))
+		return (false);
+	time = current_time() - philo->data->start_simulation + get_long(&philo->philo_mutex, &philo->last_meal_time);
+	t_to_die = philo->data->time_die;
+	if (time > t_to_die)
+	{
+		printf("time %ld t_tp_die %ld\n", time, t_to_die);
+		return (true);
+	}
+	return (false);
 }
 
-int check_meals(t_data *d, int i)
+void	increase_long(pthread_mutex_t *mutex, long *value)
 {
-	if (d->max_meals != -1 && d->philos[i].total_meals == d->max_meals)
-	{
-		handle_mutex(&d->data_mutex, LOCK);
-		d->philos[i].full = 1;
-		handle_mutex(&d->data_mutex, UNLOCK);
-		handle_mutex(&d->philos[i].philo_mutex, UNLOCK);
-		i++;
-		//continue ;
-	}
-	return (0);
+	handle_mutex(mutex, LOCK);
+	(*value)++;
+	handle_mutex(mutex, UNLOCK);
+}
+
+bool	all_threads_running(pthread_mutex_t *mutex, long *threads, long philo_nbr)
+{
+	bool	res;
+
+	res = false;
+	handle_mutex(mutex, LOCK);
+	if (*threads == philo_nbr)
+		res = true;
+	handle_mutex(mutex, UNLOCK);
+	return (res);
 }
 
 /* Monitoriza el estado de los filósofos */
-void	*monitor_philos(t_data *d)
+void	*monitor_philos(void *data)
 {
 	int		i;
+	t_data *d;
 
-	while (1)
+	d = (t_data *)data;
+	while (!all_threads_running(&d->data_mutex, &d->threads_running_nbr, d->num_philo))
+		; 
+	while(!simulation_finished(d))
 	{
 		i = 0;
-		while (i < d->num_philo)
+		while (i < d->num_philo && !simulation_finished(data))
 		{
-			handle_mutex(&d->philos[i].philo_mutex, LOCK);
-			if (current_time() - d->philos[i].last_meal > d->time_die)
+			if (philo_died(d->philos + i))
 			{
-				handle_mutex(&d->data_mutex, LOCK);
-				log_status(&d->philos[i], "died");
-				d->dead = 1;
-				handle_mutex(&d->data_mutex, UNLOCK);
-				handle_mutex(&d->philos[i].philo_mutex, UNLOCK);
-				break ;
+				set_bool(&d->data_mutex, &d->end_simulation, true);
+				log_status(d->philos + i, DYING);
 			}
-			pthread_mutex_unlock(&d->data_mutex);
-			if (check_meals(d, i))
-				break ;
 			i++;
 		}
-		//wait_ms(10);
 	}
-	//pthread_exit(NULL);
+	return (NULL);
 }

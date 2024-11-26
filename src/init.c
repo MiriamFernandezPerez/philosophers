@@ -10,67 +10,71 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
 void	ft_malloc(t_data *data)
 {
 	ft_msn(ERR_MALL, 2);
 	ft_free(data);
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
-int	init_philo(t_data *data)
+void	init_forks(t_philo *philo, t_fork *forks, int pos)
+{
+	if (philo->id % 2 == 0)
+	{
+		philo->first_fork = &forks[pos];
+		philo->second_fork = &forks[(pos + 1) % philo->data->num_philo];
+	}
+	else
+	{
+		philo->first_fork = &forks[(pos + 1) % philo->data->num_philo];
+		philo->second_fork = &forks[pos];
+	}
+}
+
+void	init_philo(t_data *data)
 {
 	int		i;
+	t_philo *philo;
 
 	i = 0;
-	data->philos = malloc(sizeof(t_philo) * data->num_philo);
-	if (!data->philos)
-		ft_malloc(data);
 	while (i < data->num_philo)
 	{
-		data->philos[i].id = i + 1;
-		data->philos[i].total_meals = 0;
-		data->philos[i].data = data;
-		data->philos[i].full = -1;
-		data->philos[i].last_meal = 0;
-		data->philos[i].left = data->philos[i].id - 1;
-		if (data->num_philo > 1)
-			data->philos[i].right = data->philos[i].id % data->num_philo;
-		data->philos[i].thread_id = -1;
-		if (handle_mutex(&data->philos[i].philo_mutex, INIT) == 1)
-			return (1);
+		philo = data->philos + i; //cambiar por data->philos[i] ej data->philos[i].data = data;
+		philo->id = i + 1;
+		philo->full = false;
+		philo->meals_counter = 0;
+		philo->data = data;
+		philo->last_meal_time = philo->data->start_simulation;
+		handle_mutex(&data->philos->philo_mutex, INIT);
+		init_forks(philo, data->forks, i);
 		i++;
 	}
-	return (0);
 }
 
-int	init(t_data *data)
+void	init_data(t_data *data)
 {
 	int	i;
 
 	i = 0;
-	data->forks = malloc(sizeof(pthread_mutex_t) * data->num_philo);
+	data->end_simulation = false;
+	data->all_threads_ready = false;
+	data->all_threads_ready = false;
+	data->threads_running_nbr = 0;
+	handle_mutex(&data->data_mutex, INIT);
+	handle_mutex(&data->write_mutex, INIT);
+	data->philos = malloc(sizeof(t_philo) * data->num_philo);
+	if (!data->philos)
+		ft_malloc(data);
+	data->forks = malloc(sizeof(t_fork) * data->num_philo);
 	if (!data->forks)
 		ft_malloc(data);
 	while (i < data->num_philo)
 	{
-		if (handle_mutex(&data->forks[i], INIT) == 1)
-		{
-			printf("error 1\n");
-			return (1);
-		}
+		handle_mutex(&data->forks[i].fork, INIT);
+		data->forks[i].fork_id = i;
 		i++;
 	}
-	if (handle_mutex(&data->data_mutex, INIT) == 1)
-	{
-		printf("error 2\n");
-		return (1);
-	}
-	if (init_philo(data) == 1)
-	{
-		printf("error 3\n");
-		return (1);
-	}
-	return (0);
+	init_philo(data);
 }

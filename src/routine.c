@@ -10,63 +10,59 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
-int	take_second_fork(t_philo *philo)
+
+void	think_philo (t_philo *philo, int flag)
 {
-	if (philo->id % 2)
-		handle_mutex(&philo->data->forks[philo->left], LOCK);
-	else
-		handle_mutex(&philo->data->forks[philo->right], LOCK);
-	log_status(philo, "has taken a fork");
-	return (0);
+	long	t_eat;
+	long	t_sleep;
+	long	t_think;
+
+	if (flag == 0)
+		log_status(philo, THINKING);
+	if(philo->data->num_philo % 2 == 0)
+		return ;
+	t_eat = philo->data->time_eat;
+	t_sleep = philo->data->time_sleep;
+	t_think = t_eat * 2 - t_sleep;
+	if (t_think < 0)
+		t_think = 0;
+	wait_ms(t_think * 0.42, philo->data);
 }
 
-/* Intento coger el primer tenedor de forma segura, evitando deadlock */
-int	take_first_fork(t_philo *philo)
+void	sleep_philo(t_philo *philo)
 {
-	if (philo->id % 2)
-		handle_mutex(&philo->data->forks[philo->right], LOCK);
-	else
-		handle_mutex(&philo->data->forks[philo->left], LOCK);
-	log_status(philo, "has taken a fork");
-	return (0);
+	log_status(philo, SLEEPING);
+	wait_ms(philo->data->time_sleep, philo->data);
 }
 
-int take_forks(t_philo *philo)
+void	eat_philo(t_philo *philo)
 {
-	if (take_first_fork(philo) != 0)
-		return (1);
-	if (philo->data->num_philo == 1)
-	{
-		wait_ms(philo->data->time_die);
-	}
-	if (take_second_fork(philo) != 0)
-		return (1);
-	if (check_dead(philo) == 1)
-	{
-		handle_mutex(&(philo->data->forks[philo->left]), UNLOCK);
-		handle_mutex(&(philo->data->forks[philo->right]), UNLOCK);
-		return (1);
-	}
-	return (0);
-}
-int	philo_eat(t_philo *philo)
-{
-	log_status(philo, "is eating");
-	handle_mutex(&(philo->philo_mutex), LOCK);
-	philo->last_meal = current_time();
-	handle_mutex(&(philo->philo_mutex), UNLOCK);
-	wait_ms(philo->data->time_eat);
-	handle_mutex(&(philo->philo_mutex), LOCK);
-	philo->total_meals++;
-	handle_mutex(&(philo->philo_mutex), UNLOCK);
-	return (0);
+	handle_mutex(&philo->first_fork->fork, LOCK);
+	log_status(philo, TAKING_FORK);
+	handle_mutex(&philo->second_fork->fork, LOCK);
+	log_status(philo, TAKING_FORK);
+	set_long(&philo->philo_mutex, &philo->last_meal_time, current_time());
+	philo->meals_counter++;
+	log_status(philo, EATING);
+	wait_ms(philo->data->time_eat, philo->data);
+	if (philo->data->nbr_limit_meals > 0 && philo->meals_counter == philo->data->nbr_limit_meals)
+		set_bool(&philo->philo_mutex, &philo->full, true);
+	handle_mutex(&philo->first_fork->fork, UNLOCK);
+	handle_mutex(&philo->second_fork->fork, UNLOCK);
 }
 
-int	philo_sleep(t_philo *philo)
+void	*one_philo(void *data)
 {
-	log_status(philo, "is sleeping");
-	wait_ms(philo->data->time_sleep);
-	return (0);
+	t_philo *philo;
+
+	philo = (t_philo *)data;
+	wait_all_threads(philo->data);
+	set_long(&philo->philo_mutex, &philo->last_meal_time, current_time());
+	increase_long(&philo->data->data_mutex, &philo->data->threads_running_nbr);
+	log_status(philo, TAKING_FORK);
+	while (!simulation_finished(philo->data))
+		usleep(200);
+	return (NULL);
 }

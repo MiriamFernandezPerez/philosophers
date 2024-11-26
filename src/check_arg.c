@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
 char	*check_input(char *str)
 {
@@ -73,29 +73,26 @@ int	check_digits(char *s)
 	return (0);
 }
 
-void	fill_data(t_data *data, char **av, int ac)
+int	fill_data(t_data *data, char **av, int ac)
 {
 	data->num_philo = ft_atol(av[1]);
-	data->time_die = ft_atol(av[2]) * 1e3;
-	data->time_eat = ft_atol(av[3]) * 1e3;
-	data->time_sleep = ft_atol(av[4]) * 1e3;
-	/*data->time_die = ft_atol(av[2]);
+	data->time_die = ft_atol(av[2]);
 	data->time_eat = ft_atol(av[3]);
-	data->time_sleep = ft_atol(av[4]);*/
+	data->time_sleep = ft_atol(av[4]);
 	if (ac == 6)
-		data->max_meals = ft_atol(av[5]);
+		data->nbr_limit_meals = ft_atol(av[5]);
 	else
-		data->max_meals = -1;
-	if (data->time_die < 6e3 || data->time_eat < 6e3 || data->time_sleep < 6e3)
+		data->nbr_limit_meals = -1;
+	if (data->time_die < 60 || data->time_eat < 60 || data->time_sleep < 60)
 	{
 		ft_msn(NO_TIME, 2);
-		exit(EXIT_FAILURE);
+		return (EXIT_FAILURE);
 	}
-	data->start = current_time();
-	data->dead = 0;
+	data->start_simulation = current_time();
+	return (EXIT_SUCCESS);
 }
 
-void	check_arg(t_data *data, char **av, int ac)
+int	check_arg(t_data *data, char **av, int ac)
 {
 	int			i;
 	long int	res;
@@ -109,11 +106,13 @@ void	check_arg(t_data *data, char **av, int ac)
 		{
 			if (res == 0)
 				ft_msn(ZERO, 2);
-			exit(EXIT_FAILURE);
+			return (EXIT_FAILURE);
 		}
 		if (check_digits(av[i]) == 1)
-			exit (EXIT_FAILURE);
+			return (EXIT_FAILURE);
 		i++;
 	}
-	fill_data(data, av, ac);
+	if (fill_data(data, av, ac) == EXIT_FAILURE)
+		return (EXIT_FAILURE);
+	return (EXIT_SUCCESS);
 }

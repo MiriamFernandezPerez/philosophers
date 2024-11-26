@@ -10,22 +10,24 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
 void ft_free(t_data *data)
 {
+	t_philo	*philo;
 	int	i;
 
 	i = 0;
 	while (i < data->num_philo)
 	{
-		pthread_mutex_destroy(&data->forks[i]);
-		pthread_mutex_destroy(&data->philos[i].philo_mutex);
+		philo = data->philos + i;
+		handle_mutex(&philo->philo_mutex, DESTROY);
 		i++;
 	}
+	handle_mutex(&data->write_mutex, DESTROY);
+	handle_mutex(&data->data_mutex, DESTROY);
 	free(data->philos);
 	free(data->forks);
-	pthread_mutex_destroy(&data->data_mutex);
 }
 
 //Write msn function
@@ -46,15 +48,16 @@ int	main(int ac, char **av)
 		ft_msn(ERR_ARGS, 2);
 		ft_msn(NUM_PH, 2);
 		ft_msn(TIMES, 2);
-		return (ft_msn(OPTIONAL, 2), 1);
+		return (ft_msn(OPTIONAL, 2), EXIT_FAILURE);
 	}
 	else
 	{
-		check_arg(&data, av, ac);
-		if (init(&data) == 1)
-			return (1);
-		start(&data);
-		ft_free(&data);
+		if (check_arg(&data, av, ac) == EXIT_SUCCESS)
+		{
+			init_data(&data);
+			start(&data);
+			ft_free(&data);
+		}
 	}
 	return (0);
 }

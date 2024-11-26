@@ -10,66 +10,99 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
-/* Desbloqueo los mutex de los tenedores */
-void	release_forks(t_philo *philo)
+void	wait_all_threads(t_data *data)
 {
-	handle_mutex(&(philo->data->forks[philo->left]), UNLOCK);
-	handle_mutex(&(philo->data->forks[philo->right]), UNLOCK);
+	while (!get_bool(&data->data_mutex, &data->all_threads_ready))
+		;
 }
 
-int	check_dead(t_philo *philo)
+long	current_time()
+{
+	struct timeval	tv;
+
+	if (gettimeofday(&tv, NULL))
+		return (ft_msn(GET_TIME, 2), -1);
+	return (tv.tv_sec * 1000 + (tv.tv_usec) / 1000);
+}
+
+void	log_status(t_philo *philo, t_status status)
 {
 	long	time;
 
-	time = current_time();
-	handle_mutex(&philo->data->data_mutex, LOCK);
-	if (philo->data->dead == 1)
-	{
-		handle_mutex(&philo->data->data_mutex, UNLOCK);
-		return (1);
-	}
-	if (time - philo->last_meal > philo->data->time_die)
-	{
-		philo->data->dead = 1;
-		//printf("%ld %d died\n", time - philo->data->start, philo->id);
-		handle_mutex(&philo->data->data_mutex, UNLOCK);
-		return (1);
-	}
-	handle_mutex(&philo->data->data_mutex, UNLOCK);
-	return (0);
+	time = current_time() - philo->data->start_simulation;
+	if (philo->full)
+		return ;
+	handle_mutex(&philo->data->write_mutex, LOCK);
+	if (status == TAKING_FORK && !simulation_finished(philo->data))
+		printf("%ld Philosopher %d %s\n", time, philo->id, FORK);
+	else if (status == EATING && !simulation_finished(philo->data))
+		printf("%ld Philosopher %d %s\n", time, philo->id, EAT);
+	else if (status == SLEEPING && !simulation_finished(philo->data))
+		printf("%ld Philosopher %d %s\n", time, philo->id, SLEEP);
+	else if (status == THINKING && !simulation_finished(philo->data))
+		printf("%ld Philosopher %d %s\n", time, philo->id, THINK);
+	else if (status == DYING)
+		printf("%ld Philosopher %d %s\n", time, philo->id, DIED);
+	handle_mutex(&philo->data->write_mutex, UNLOCK);
 }
 
-/* Simulación de cada filósofo */
+void	wait_ms(long time, t_data *data)
+{
+	long	start;
+	long	elapsed;
+	long	res;
+
+	start = current_time();
+	while (current_time() - start < time)
+	{
+		if (simulation_finished(data))
+			break ;
+		elapsed = current_time() - start;
+		res = time - elapsed;
+		if (res > 1000)
+			usleep(res / 2);
+		else
+		{
+			while (current_time() - start < time)
+				;
+		}
+	}
+}
+
+void	stop_sincro(t_philo *philo)
+{
+	if (philo->data->num_philo % 2 == 0)
+	{
+		if (philo->id % 2 == 0)
+			wait_ms(1000, philo->data);
+	}
+	else
+	{
+		if(philo->id % 2)
+			think_philo(philo, 1);
+	}
+}
+
 void	*simulation(void *data)
 {
-	t_philo	*philo;
+	t_philo *philo;
 
 	philo = (t_philo *)data;
-	while (1)
+	wait_all_threads(philo->data);
+	set_long(&philo->philo_mutex, &philo->last_meal_time, current_time());
+	increase_long(&philo->data->data_mutex, &philo->data->threads_running_nbr);
+	stop_sincro(philo);
+	while (!simulation_finished(philo->data))
 	{
-		if (take_forks(philo) == 0)
-		{
-			log_status(philo, "is eating");
-			philo->last_meal = current_time();
-			//wait_ms(philo->data->time_eat);
-			release_forks(philo);
-			log_status(philo, "is sleeping");
-			wait_ms(philo->data->time_sleep);
-			log_status(philo, "is thinking");
-
-		}
-			continue ;
-
-		pthread_mutex_unlock(&philo->data->data_mutex);
-		wait_ms(philo->data->time_eat);
-		release_forks(philo);
-		log_status(philo, "is sleeping");
-		wait_ms(philo->data->time_sleep);
-		log_status(philo, "is thinking");
+		if (philo->full)
+			break ;
+		eat_philo(philo);
+		sleep_philo(philo);
+		think_philo(philo, 0);
 	}
-	pthread_exit(NULL);
+	return (NULL);
 }
 
 /* Inicia la simulación */
@@ -78,21 +111,29 @@ void	start(t_data *data)
 	int			i;
 
 	i = 0;
-	if (data->max_meals == 0)
+	if (data->nbr_limit_meals == 0)
 		return ;
-	/* Creo los hilos para los filósofos */
-	while (i < data->num_philo)
+	else if (data->num_philo == 1)
 	{
-		data->philos[i].last_meal = data->start;
-		handle_thread(&data->philos[i].thread_id, simulation, &data->philos[i], CREATE);
-		i++;
+		handle_thread(&data->philos[0].thread_id, one_philo, &data->philos[0], CREATE);
 	}
-	monitor_philos(data);
+	else
+	{
+		while (i < data->num_philo)
+		{
+			handle_thread(&data->philos[i].thread_id, simulation, &data->philos[i], CREATE);
+			i++;
+		}
+	}
+	handle_thread(&data->monitor, monitor_philos, data, CREATE);
+	data->start_simulation = current_time();
+	set_bool(&data->data_mutex, &data->all_threads_ready, true);
 	i = 0;
-	/* Espero que todos los filósofos terminen */
 	while (i < data->num_philo)
 	{
 		handle_thread(&data->philos[i].thread_id, NULL, NULL, JOIN);
 		i++;
 	}
+	set_bool(&data->data_mutex, &data->end_simulation, true);
+	handle_thread(&data->monitor, NULL, NULL, JOIN);
 }

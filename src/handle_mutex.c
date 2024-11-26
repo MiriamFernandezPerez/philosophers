@@ -10,50 +10,36 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../inc/philo.h"
 
-int	mutex_error(int status, t_code code)
+void	mutex_error(int status, t_code code)
 {
 	if (status == 0)
-		return (0);
+		return ;
 	if (status == EINVAL && (code == LOCK || code == UNLOCK))
-		return(ft_msn(VALUE_MUTEX, 2), 1);
+		ft_msn(VALUE_MUTEX, 2);
 	else if (status == EINVAL && code == INIT)
-		return (ft_msn(VALUE_ATTR, 2), 1);
+		ft_msn(VALUE_ATTR, 2);
 	else if (status == EDEADLK)
-		return (ft_msn(DEAD, 2), 1);
+		ft_msn(DEAD, 2);
 	else if (status == EPERM)
-		return (ft_msn(PERM, 2), 1);
+		ft_msn(PERM, 2);
 	else if (status == ENOMEM)
-		return (ft_msn(NO_MEM, 2), 1);
+		ft_msn(NO_MEM, 2);
 	else if (status == EBUSY)
-		return (ft_msn(BUSY, 2), 1);
-	return (0);
+		ft_msn(BUSY, 2);
 }
 
-int	handle_mutex(pthread_mutex_t *mutex, t_code code)
+void	handle_mutex(pthread_mutex_t *mutex, t_code code)
 {
 	if (code == LOCK)
-	{
-		if (mutex_error(pthread_mutex_lock(mutex), code) != 0)
-			return (1);
-	}
+		mutex_error(pthread_mutex_lock(mutex), code);
 	else if (code == UNLOCK)
-	{
-		if (mutex_error(pthread_mutex_unlock(mutex), code) != 0)
-			return (1);
-	}
+		mutex_error(pthread_mutex_unlock(mutex), code);
 	else if (code == INIT)
-	{
-		if (mutex_error(pthread_mutex_init(mutex, NULL), code) != 0)
-			return (1);
-	}
+		mutex_error(pthread_mutex_init(mutex, NULL), code);
 	else if (code == DESTROY)
-	{
-		if (mutex_error(pthread_mutex_destroy(mutex), code) != 0)
-			return (1);
-	}
+		mutex_error(pthread_mutex_destroy(mutex), code);
 	else
-		return(ft_msn(MUT_CODE, 2), 1);
-	return (0);
+		ft_msn(MUT_CODE, 2);
 }
